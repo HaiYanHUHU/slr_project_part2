@@ -22,7 +22,8 @@ class SignLanguageDataset(Dataset):
         self.transform = transform
         self.label_map = label_map
 
-        self.samples = []  # Each sample is (frame path list, label)
+        self.samples = [] 
+         # Each sample is (frame path list, label)
         for class_name in os.listdir(root_dir):
             class_path = os.path.join(root_dir, class_name)
             if not os.path.isdir(class_path):
