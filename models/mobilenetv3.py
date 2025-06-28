@@ -18,7 +18,8 @@ class MobileNetV3Extractor(nn.Module):
             Tensor, shape [B, T, D] — Feature sequence of each frame
         """
         B, T, C, H, W = x.shape
-        x = x.view(B * T, C, H, W)
+        #x = x.view(B * T, C, H, W)
+        x = x.reshape(B * T, C, H, W)
         x = self.features(x)
         x = self.pool(x)              # [B*T, D, 1, 1]
         x = x.view(B, T, -1)          # [B, T, D]

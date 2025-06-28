@@ -33,6 +33,16 @@ class SignLanguageDataset(Dataset):
                 frame_paths = sorted(glob(os.path.join(frame_dir, "*.jpg")))
                 if len(frame_paths) >= 1:
                     self.samples.append((frame_paths, self.label_map[class_name]))
+        
+        # Print the paths and labels of the first 20 samples
+        print("\n[DEBUG] First 20 samples loaded:")
+        for i in range(min(20, len(self.samples))):
+            frame_paths, label = self.samples[i]
+            class_name = list(self.label_map.keys())[list(self.label_map.values()).index(label)]
+            print(f"Sample {i}: class={class_name}, label={label}")
+            print(f"    Frame count: {len(frame_paths)} | First frame: {frame_paths[0]}")
+
+
 
     def __len__(self):
         return len(self.samples)
@@ -56,5 +66,7 @@ class SignLanguageDataset(Dataset):
             images.append(image)
 
         # return shape: [T, C, H, W], with the label as int
-        video_tensor = torch.stack(images)
+        #video_tensor = torch.stack(images)
+        # video_tensor = video_tensor.permute(1, 0, 2, 3) #[C, T, H, W]
+        video_tensor = torch.stack(images).permute(1, 0, 2, 3)
         return video_tensor, label
