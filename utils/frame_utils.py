@@ -1,7 +1,7 @@
 import os
 import cv2
 
-def extract_frames_from_video(video_path, output_dir, max_frames=30):
+def extract_frames_from_video(video_path, output_dir, max_frames=20):
     """
     Uniformly extract max_frames images from the video and save them as jpg.
    

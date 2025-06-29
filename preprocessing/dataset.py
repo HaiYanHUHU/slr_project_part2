@@ -9,7 +9,7 @@ import cv2
 import torch
 
 class SignLanguageDataset(Dataset):
-    def __init__(self, root_dir, label_map, num_frames=30, split="train", transform=None):
+    def __init__(self, root_dir, label_map, num_frames=20, split="train", transform=None):
         """
         root_dir:Frame image root path. -- data/frames/train
         label_map: A mapping dictionary from category to index
@@ -57,8 +57,8 @@ class SignLanguageDataset(Dataset):
 
         images = []
         for path in frame_paths:
-            image = cv2.imread(path)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            
             if self.transform:
                 image = self.transform(image=image)["image"]
             else:
@@ -66,7 +66,5 @@ class SignLanguageDataset(Dataset):
             images.append(image)
 
         # return shape: [T, C, H, W], with the label as int
-        #video_tensor = torch.stack(images)
-        # video_tensor = video_tensor.permute(1, 0, 2, 3) #[C, T, H, W]
-        video_tensor = torch.stack(images).permute(1, 0, 2, 3)
+        video_tensor = torch.stack(images)
         return video_tensor, label
