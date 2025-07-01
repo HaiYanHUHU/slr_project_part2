@@ -28,19 +28,10 @@ class SignLanguageDataset(Dataset):
             class_path = os.path.join(root_dir, class_name)
             if not os.path.isdir(class_path):
                 continue
-            for video_id in os.listdir(class_path):
-                frame_dir = os.path.join(class_path, video_id)
-                frame_paths = sorted(glob(os.path.join(frame_dir, "*.jpg")))
-                if len(frame_paths) >= 1:
-                    self.samples.append((frame_paths, self.label_map[class_name]))
-        
-        # Print the paths and labels of the first 20 samples
-        print("\n[DEBUG] First 20 samples loaded:")
-        for i in range(min(20, len(self.samples))):
-            frame_paths, label = self.samples[i]
-            class_name = list(self.label_map.keys())[list(self.label_map.values()).index(label)]
-            print(f"Sample {i}: class={class_name}, label={label}")
-            print(f"    Frame count: {len(frame_paths)} | First frame: {frame_paths[0]}")
+        for pt_file in os.listdir(class_path):
+            if pt_file.endswith(".pt"):
+                pt_path = os.path.join(class_path, pt_file)
+                self.samples.append((pt_path, self.label_map[class_name]))
 
 
 
@@ -48,23 +39,11 @@ class SignLanguageDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        frame_paths, label = self.samples[idx]
-        # truncate or fill the frame length
-        if len(frame_paths) >= self.num_frames:
-            frame_paths = frame_paths[:self.num_frames]
-        else:
-            frame_paths += [frame_paths[-1]] * (self.num_frames - len(frame_paths))
+        pt_path, label = self.samples[idx]
+        video = torch.load(pt_path)            # [T, C, H, W]
+        #video = video.permute(1, 0, 2, 3)      # [C, T, H, W] for CNN input (frame-sequence)
 
-        images = []
-        for path in frame_paths:
-            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
-            
-            if self.transform:
-                image = self.transform(image=image)["image"]
-            else:
-                image = T.ToTensor()(Image.fromarray(image))
-            images.append(image)
+        if self.transform:
+            video = self.transform(video)
 
-        # return shape: [T, C, H, W], with the label as int
-        video_tensor = torch.stack(images)
-        return video_tensor, label
+        return video, label
