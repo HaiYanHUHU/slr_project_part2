@@ -32,6 +32,14 @@ class SignLanguageDataset(Dataset):
             if pt_file.endswith(".pt"):
                 pt_path = os.path.join(class_path, pt_file)
                 self.samples.append((pt_path, self.label_map[class_name]))
+        
+        # Print the paths and labels of the first 20 samples
+        print("\n[DEBUG] First 20 samples loaded:")
+        for i in range(min(20, len(self.samples))):
+            frame_paths, label = self.samples[i]
+            class_name = list(self.label_map.keys())[list(self.label_map.values()).index(label)]
+            print(f"Sample {i}: class={class_name}, label={label}")
+            print(f"    Frame count: {len(frame_paths)} | First frame: {frame_paths[0]}")
 
 
 
@@ -39,11 +47,23 @@ class SignLanguageDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        pt_path, label = self.samples[idx]
-        video = torch.load(pt_path)            # [T, C, H, W]
-        #video = video.permute(1, 0, 2, 3)      # [C, T, H, W] for CNN input (frame-sequence)
+        frame_paths, label = self.samples[idx]
+        # truncate or fill the frame length
+        if len(frame_paths) >= self.num_frames:
+            frame_paths = frame_paths[:self.num_frames]
+        else:
+            frame_paths += [frame_paths[-1]] * (self.num_frames - len(frame_paths))
 
-        if self.transform:
-            video = self.transform(video)
+        images = []
+        for path in frame_paths:
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            
+            if self.transform:
+                image = self.transform(image=image)["image"]
+            else:
+                image = T.ToTensor()(Image.fromarray(image))
+            images.append(image)
 
-        return video, label
+        # return shape: [T, C, H, W], with the label as int
+        video_tensor = torch.stack(images)
+        return video_tensor, label
