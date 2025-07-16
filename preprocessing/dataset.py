@@ -10,38 +10,33 @@ import torch
 
 class SignLanguageDataset(Dataset):
     def __init__(self, root_dir, label_map, num_frames=20, split="train", transform=None):
-        """
-        root_dir:Frame image root path. -- data/frames/train
-        label_map: A mapping dictionary from category to index
-        num_frames: The number of frames used in each video segment
-        split: Dataset partitioning (train/val/test)
-        transform: image augmentation (albumentations)
-        """
+       
         self.root_dir = root_dir
         self.num_frames = num_frames
         self.transform = transform
         self.label_map = label_map
 
         self.samples = [] 
-         # Each sample is (frame path list, label)
+        # Each sample is (frame path list, label)
         for class_name in os.listdir(root_dir):
             class_path = os.path.join(root_dir, class_name)
             if not os.path.isdir(class_path):
                 continue
-        for pt_file in os.listdir(class_path):
-            if pt_file.endswith(".pt"):
-                pt_path = os.path.join(class_path, pt_file)
-                self.samples.append((pt_path, self.label_map[class_name]))
-        
-        # Print the paths and labels of the first 20 samples
-        print("\n[DEBUG] First 20 samples loaded:")
-        for i in range(min(20, len(self.samples))):
+            for video_id in os.listdir(class_path):
+                video_path = os.path.join(class_path, video_id)
+                if not os.path.isdir(video_path):
+                    continue
+                frame_paths = sorted(glob(os.path.join(video_path, '*.jpg')))
+                if len(frame_paths) == 0:
+                    continue
+                self.samples.append((frame_paths, self.label_map[class_name]))
+        # Print the paths and labels of the first 5 samples
+        print("\n[DEBUG] First 5 samples loaded:")
+        for i in range(min(5, len(self.samples))):
             frame_paths, label = self.samples[i]
             class_name = list(self.label_map.keys())[list(self.label_map.values()).index(label)]
             print(f"Sample {i}: class={class_name}, label={label}")
             print(f"    Frame count: {len(frame_paths)} | First frame: {frame_paths[0]}")
-
-
 
     def __len__(self):
         return len(self.samples)
