@@ -9,7 +9,7 @@ import cv2
 import torch
 
 class SignLanguageDataset(Dataset):
-    def __init__(self, root_dir, label_map, num_frames=20, split="train", transform=None):
+    def __init__(self, root_dir, label_map, num_frames=16, split="train", transform=None):
        
         self.root_dir = root_dir
         self.num_frames = num_frames
